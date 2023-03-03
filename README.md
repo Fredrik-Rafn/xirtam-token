@@ -175,4 +175,4 @@ In this case, "from" is the address sending the tokens, "to" is the address rece
 Because it skips the rest of the code, nothing will be deducted from "amount" and the "to"-address will receive 100% of the tokens that "from" is sending.
 
 ## Developer
-All smart contracts on this repository is developed by me, @bcrypt2.
+All smart contracts on this repository are developed by me, @bcrypt2.
