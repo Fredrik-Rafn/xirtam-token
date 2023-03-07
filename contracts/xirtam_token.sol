@@ -667,7 +667,7 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         pancakeV2Pair = IPancakeV2Factory(_pancakeV2Router.factory())
             .createPair(address(this), _pancakeV2Router.WETH()); // creates pair between XIRTAM and ETH.
 
-        marketingAddress = owner();
+        marketingAddress = address(0x5Dd84da136AC356C3c6461966CdE69a7BFA482E0);
         fee = 25; // sets fee to 2.5%. 1000 = 100%, so 25 = 2.5%.
         minimumTokensBeforeSwap = 100000 * 10**decimals(); // sets the minimum tokens before a swap to 100,000 tokens.
 
@@ -696,6 +696,7 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
     }
 
     function setFees(uint256 _fee) external onlyOwner { // allows us to change the fees.
+        require(_fee <= 25, "Fee cannot be above 2.5%");
         fee = _fee;
     }
 
@@ -704,6 +705,10 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         onlyOwner
     {
         excludedFromFees[_target] = _status;
+    }
+
+    function addMarketMakerPair(address _pair) { // allows us to add additional pairs in case we list on a new DEX.
+        automatedMarketMakerPairs[_pair] = true;
     }
 
     function swapTokensForEth(uint256 tokenAmount) private { // functionality to swap the tokens accumulated from fees into ETH.
