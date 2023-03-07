@@ -707,8 +707,8 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         excludedFromFees[_target] = _status;
     }
 
-    function addMarketMakerPair(address _pair) { // allows us to add additional pairs in case we list on a new DEX.
-        automatedMarketMakerPairs[_pair] = true;
+    function editMarketMakerPair(address _pair, bool _flag) { // allows us to add additional pairs in case we list on a new DEX.
+        automatedMarketMakerPairs[_pair] = _flag;
     }
 
     function swapTokensForEth(uint256 tokenAmount) private { // functionality to swap the tokens accumulated from fees into ETH.
