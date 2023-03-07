@@ -174,5 +174,16 @@ In this case, "from" is the address sending the tokens, "to" is the address rece
 2. Because neither "from" or "to" is the XIRTAM/ETH pair, it won't set the trade_type to anything, meaning it will skip all the code until line 769, where it sends the tokens to the "to"-address.
 Because it skips the rest of the code, nothing will be deducted from "amount" and the "to"-address will receive 100% of the tokens that "from" is sending.
 
+#### FAQ
+
+##### Q: Is the contract owner able to rug or cause harm to investors?
+A: No, the only thing the contract owner can do that impacts investors is changing the fees, however since the code prevents the contract owner from setting the fee to anything above 2.5% (which is the designated fee for XIRTAM), the only thing that can happen is the fees getting lowered.
+
+##### Q: Why can the contract owner exclude addresses from fees?
+A: This function is made as a safety measure and to future-proof the smart contract for XIRTAM. It is quite likely that XIRTAM might want to be listed on multiple DEXs, and some of these exchanges require the token to exclude/whitelist the router of the DEX in order to be listed.
+
+##### Q: Can the contract owner blacklist or disable fees?
+A: No. The contract owner is not able to do anything that can interfere with anyone trading. Everyone will always be able to trade their XIRTAM tokens.
+
 ## Developer
 All smart contracts on this repository are developed by me, @bcrypt2.
