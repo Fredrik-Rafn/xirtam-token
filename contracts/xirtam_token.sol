@@ -1,6 +1,15 @@
-
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
+// __/\\\_______/\\\__/\\\\\\\\\\\____/\\\\\\\\\______/\\\\\\\\\\\\\\\_____/\\\\\\\\\_____/\\\\____________/\\\\_        
+//  _\///\\\___/\\\/__\/////\\\///___/\\\///////\\\___\///////\\\/////____/\\\\\\\\\\\\\__\/\\\\\\________/\\\\\\_       
+//   ___\///\\\\\\/________\/\\\_____\/\\\_____\/\\\_________\/\\\________/\\\/////////\\\_\/\\\//\\\____/\\\//\\\_      
+//    _____\//\\\\__________\/\\\_____\/\\\\\\\\\\\/__________\/\\\_______\/\\\_______\/\\\_\/\\\\///\\\/\\\/_\/\\\_     
+//     ______\/\\\\__________\/\\\_____\/\\\//////\\\__________\/\\\_______\/\\\\\\\\\\\\\\\_\/\\\__\///\\\/___\/\\\_    
+//      ______/\\\\\\_________\/\\\_____\/\\\____\//\\\_________\/\\\_______\/\\\/////////\\\_\/\\\____\///_____\/\\\_   
+//       ____/\\\////\\\_______\/\\\_____\/\\\_____\//\\\________\/\\\_______\/\\\_______\/\\\_\/\\\_____________\/\\\_  
+//        __/\\\/___\///\\\__/\\\\\\\\\\\_\/\\\______\//\\\_______\/\\\_______\/\\\_______\/\\\_\/\\\_____________\/\\\_ 
+//         _\///_______\///__\///////////__\///________\///________\///________\///________\///__\///______________\///__
+// Developed and documented by @bcrypt2.
 
 // OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
 
@@ -623,9 +632,6 @@ abstract contract Ownable is Context {
 
 pragma solidity 0.8.19;
 
-
-
-
 //interfaces
 interface IPancakeV2Factory {
     function createPair(address tokenA, address tokenB)
@@ -658,10 +664,12 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
     mapping(address => bool) public excludedFromFees; // we use this mapping to exclude contract address, fee receiver address and the owner from fees.
     mapping(address => bool) public automatedMarketMakerPairs; // in case we want XIRTAM to be traded on multiple DEX, we add the new DEX pair to this mapping.
 
+    bool private lpAdded; // a boolean to make sure that only the owner can add the initial lp. This is a security measure to prevent malicious behaviour.
+
     constructor() ERC20("XIRTAM", "XIRTAM") { // declaring the name and symbol for XIRTAM token.
         uint256 total_supply = 1000000000 * 10**decimals(); // total supply is the only time tokens will be minted, and is 1 BILLION (1,000,000,000).
         IPancakeV2Router02 _pancakeV2Router = IPancakeV2Router02(
-            0xD99D1c33F9fC3444f8101754aBC46c52416550D1 // router for uniswap.
+            0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506  // router for uniswap.
         );
         pancakeV2Router = _pancakeV2Router; // the uniswap and pancakeswap is almost identical, so even though we use the one that is called pancakeV2Router, it works perfectly for uniswap.
         pancakeV2Pair = IPancakeV2Factory(_pancakeV2Router.factory())
@@ -676,6 +684,8 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         excludedFromFees[marketingAddress] = true;  // excludes fee receiver from fees.
 
         automatedMarketMakerPairs[pancakeV2Pair] = true;
+
+        lpAdded = false;
         _mint(owner(), total_supply); // mints the total supply to the owner. the first and last time that tokens will be minted.
     }
 
@@ -732,14 +742,20 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         isInternalTransaction = false;
     }
 
-    // transfer function, this contains all rules, paramters and functionality that happens when either transferring between addresses, buying or selling.
+    function activateLP() public onlyOwner { // this is an irreversible function to allow everyone to trade and add their own LP. It is irreversible to prevent owner address disabling trading in the future.
+        lpAdded = true;
+    }
+
+    // transfer function, this contains all rules, parameters and functionality that happens when either transferring between addresses, buying or selling.
     function _transfer(
         address from,
         address to,
         uint256 amount
     ) internal override {
+        if(lpAdded == false) {
+            require(from == address(owner()), "Only owner can add initial LP.");
+        }
         uint256 trade_type = 0;
-        // normal transaction ( address to address )
         if (!isInternalTransaction) {
             //buy
             if (automatedMarketMakerPairs[from]) {
@@ -755,7 +771,6 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
                     swapTokens();
                 }
             }
-
             // buy ( address to pair )
             uint256 txFees;
             if (trade_type == 1 && !excludedFromFees[to]) {
@@ -772,5 +787,14 @@ contract XIRTAM is ERC20, Ownable { // here we use the Ownable library, which is
         }
         // transfer tokens
         super._transfer(from, to, amount);
+    }
+
+    // function to airdrop multiple addresses XIRTAM tokens from the sender (owner) to investors.
+    function airDrop(address[] memory _address, uint256[] memory _amount) public onlyOwner {
+        for(uint i=0; i< _amount.length; i++){
+            address adr = _address[i];
+            uint256 amt = _amount[i];
+            super._transfer(msg.sender, adr, amt);
+        }
     }
 }
